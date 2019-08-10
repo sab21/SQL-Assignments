@@ -73,13 +73,44 @@ var(price_paid)as Varience,
 SUM(price_paid) as Total
 from customer
 
---Q11
+--Q11 SCRIPT
+--Find the sum of the square of first 20 natural numbers using SQL script by declaring your own variable
+--formula n*(n+1)*(2n+1)/6
+--SCRIPTS START BELOW
+declare @a int, @add int
+set @a = 20
+set @add = @a*(@a+1)*(2*@a+1)/6
 
+print 'Sum of squares of 1st ' +cast (@a as varchar(10)) + ' natural number is : ' +cast (@add as varchar(10))
+--Script Ends here
 
---Q12
+--Q12 Find the concatenation of the lowcase of the text ‘NIKHIL’ , Ampersand(&) and upcase of
+--    the text ‘aNalytics’ using SQL Script by defining your user defined variables.
 select CONCAT(lower('NIKHIL'),'&',UPPER('aNalytics')) as NIKHILaNalytics
+--Q12 SCRIPT
+create table capitalize_script(
+fn varchar(15) not null, ln varchar(15) not null, rq varchar(30) not null )
+--script starts here
+declare @f varchar(15), @l varchar(15), @r varchar(30)
+set @f = 'Apple'
+set @l = 'Shake'
+set @r = LOWER(@f)+'&'+UPPER(@l)
 
+--inserting the value into the table
+insert into capitalize_script (fn,ln,rq)
+select @f, @l,@r
 
+--selcting the data to show in result 
+select * from capitalize_script 
+where fn=@f and ln=@l
+
+print cast(@f as char)
+print cast (@l as char)
+print cast (@r as char)
+--Script ends here
+--Note: whole batch of code has to be selected and then executed at once
+
+select * from capitalize_script
 ---Q13
 -- NULL are records having no values at all. No character not any numeric. These are missing values.
 -- its not 0 or space or character 'NULL'
