@@ -1,0 +1,150 @@
+
+
+--SQL Module Test 1
+
+--Q1. Explain Check and Default constraints with syntax and examples? (Marks 3)
+--Ans:
+--a:
+--CHECK constraint is a logical condition constraint where when value is feeded it will go through the the 
+--logic to get recorded. If the condition fail it wont allow the record to be entered. 
+--Syntax:
+--Create Table table_name column_name check (logical condition) or
+--alter table table_name add constraint constarintname check (logical expression)
+ 
+--b.
+--Deafult constarint is used to put default value in the column  instead of NULL value.
+--Syntax:
+--Create Table table_name column_name default value or
+--ALTER TABLE table_name ADD CONSTRAINT constarint_name DEFAULT value FOR columnname
+
+--Q2. Explain UPDATE statement along with the syntax. (Marks 3)
+--Ans:
+--Update statement is used to change or add values/records of a  into the table. It is also used to add columns
+--Its A DML command.
+--Syntax: 
+--Update table_name set column_name = value where column_name condition
+
+----Q3. Can we have both primary and foreign key in the same table? If so, explain by providing appropriate example. (Marks 3)
+----Ans:
+--Yes we can use both primary and foreign key in the same table. For Example: in a emp table emp_id and mgr_id 
+--must be same hence emp id  can be take PK and mgr id as FK
+
+--Q4. Explain with syntax and examples the usage of the following functions: (Marks 5) 
+--Ans:
+
+--COUNT(): It is used to count the number of records in table
+--Takes 1 arguement and return the count value
+
+--DATEADD(): This function takes 3 arguement, 
+--1st arguemnet is interval like day, month, year, qtr 
+--2nd qtr is integer for incrementing the interval
+--3rd arg is date from which the calculation has to be made
+--Returns a date which inceremented from the given date by interval multiplied by integer
+--e.g
+select DATEADD(day,5,getdate())--returns 5 day from today
+--SUBSTRING(): It s used to devide the string as required. Takes 3 arg
+--1st Arg: String Expression
+--2nd Arg: starting position
+--3rd Arg: length 
+--Returns: the part of the string
+--e.g
+select SUBSTRING('Nikhil Analytics',1,6)--Returns 1st 6 character
+--RANK(): This function returns the rank of the column in ascending way by default
+--same value get same rank, next value get cumulative rank. for e.g two record get rank 1 the the 2nd rank 
+--will start from 3
+--Syntax:
+--select RANK()  over ([partition by ]order by column_name)
+
+
+--CAST(): It is used to transform integer bigint binary into character 
+--(not permananly, only for that function call)
+--For example coalesce takes same datatypes as its arguement so it can be used to override that issue.
+select cast(25.3 as char)
+
+--Q5.
+--(i) Extract 5 characters from 4th position of the string „Nikhil Analytics‟. 
+--Also convert it into upper case. (Marks 3)
+--Ans:
+select upper(substring('Nikhil Analytics',4,5))
+
+
+--(ii) Count the number of characters from the string „
+--Bengaluru is a beautiful City‟ and also reverse it. (Marks 3)
+--Ans:
+select len('Bengaluru is a beautiful City')
+select REVERSE('Bengaluru is a beautiful City')
+
+
+--Q6. Create a table “Patient” from Patient.xlsx file (Marks 2)
+--Below queries are supposed to be solved using Patient table.
+--Solution:
+--Creating Table
+create table Patient (
+	NAME varchar (10),
+	CITY Varchar (20),	
+	GENDER varchar (5),	
+	AGE int,
+	WEIGHT float,
+	HEIGHT float,	
+	Admission_Date date	,
+	Discharge_Date date
+	)
+
+--Inserting values
+insert into Patient
+select 'Alfred','Chicago','M',14,69,112.5,'01/15/2008','01/20/2008'
+union select 'Alice','New York','F',13,56.5,84,'02/17/2008','02/25/2008'
+union select 'Barbara','California','F',13,65.3,98,'07/22/2008','08/10/2008'
+union select 'Carol','Las Vegas','F',14,62.8,102.5,'04/07/2008','04/15/2008'
+union select 'Henry','Chicago','M',14,63.5,102.5,'11/10/2008','12/01/2008'
+union select 'James','New York','M',12,57.3,83,'10/30/2008','11/11/2008'
+union select 'Jane','California','F',12,59.8,84.5,'05/12/2008','06/12/2008'
+union select 'Janet','Las Vegas','F',15,62.5,112.5,'06/10/2008','07/14/2008'
+union select 'Jeffrey','Chicago','M',13,62.5,84,'05/05/2008','05/18/2008'
+union select 'John','New York','M',12,59,99.5,'12/27/2008','01/05/2009'
+union select 'Joyce','California','F',11,51.3,50.5,'02/17/2008','02/28/2008'*
+select * from Patient
+
+--Q7. Write a SQL query to find name, gender and weight of all records. (Marks 3)
+
+SELECT NAME, GENDER, WEIGHT FROM Patient
+
+--Q8. Write a SQL query to find name, age and city for those patients whose name has “a” in it 
+--and they belong to Chicago, New York and California. (Marks 5)
+
+SELECT NAME, AGE, CITY FROM Patient where name like '%a%'  and 
+CITY IN ('Chicago', 'New York', 'California') 
+
+
+ 
+--Q9. Write a SQL query to change the height of those patients whose age is equal to 14. Update the 
+--height to 90. Use rollback to revert back the changes. (Marks 5)
+
+begin transaction
+update Patient set height =90 where age =14 -- 3 value modified
+select * from Patient 
+rollback
+
+
+
+--Q10. Write an SQL query to find the follow checkup date by adding 15 days to discharge date and 
+--also find the difference in admission date and discharge date in terms of days. (Marks 5)
+select *, DATEADD(day,15,discharge_date) as checkup_date from Patient
+
+select *, DATEDIFF(day,admission_date,discharge_date) as patient_stay_in_Day from Patient
+
+--Q11. Write an SQL query to add a new column “patient_id” for each patient by extracting 
+--first 3 letters from name in uppercase followed by the city they belong to. (Marks 5)
+
+begin transaction
+alter table patient add patient_id varchar(20)
+select *, concat(upper(left(name,3)),city) as Patient_id from Patient
+update patient set patient_id = concat(upper(left(name,3)),city)
+select * from patient
+commit
+
+--Q12. Write an SQL query to generate the ranking based on higher to lower values of height
+-- within each city. (Marks 5)
+select *, rank()over(partition by city order by height desc) rank_ht from patient
+
+
