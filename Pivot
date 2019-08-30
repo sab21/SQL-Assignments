@@ -82,12 +82,14 @@ VALUES ('Australia', 2005, 1309047.1978),
 SELECT *
 FROM Product_Pivot
 
---Q1
+--Demo1
 --Pivoting Product_Pivot PER UNIQUE VALUE OF PRODUCT
 SELECT cust,[VEG],[SODA],[MILK],[BEER]
 FROM (SELECT * FROM Product_Pivot)AS A
 PIVOT (SUM(QTY) FOR PRODUCT IN ([VEG],[SODA],[MILK],[BEER])) AS PVT1
 
+
+--Assignement 1
 --Pivoting Product_Pivot PER UNIQUE VALUE OF CUSTOMER
 SELECT PRODUCT,[KATE],[FRED]
 FROM (SELECT CUST,QTY,PRODUCT FROM Product_Pivot) AS A
@@ -115,7 +117,7 @@ PIVOT ( SUM(SALESAMOUNT) FOR COUNTRY IN ([Australia],
 [United Kingdom],[United States])) AS PVT 
 
 
-Demonstration2:
+--Demonstration2:
 
 USE AdventureWorks2008
 SELECT DaysToManufacture, StandardCost
