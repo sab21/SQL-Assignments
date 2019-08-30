@@ -1,0 +1,269 @@
+use AdventureWorks2008
+
+--1. What is the difference between Non-Correlated Sub-Queries and Correlated Sub- Queries?
+--Ans:
+--Non-Correlated sub queries are those sub queries in which inner query is independent of outer query and can
+--be executed exclusively without main query 
+--wheresas 
+--In Correlated sub queries inner query is dependent of outer query and it cannot
+--be executed exclusively without main query
+
+--In NonCorrelated SQ inner query acts as a condition for the main query where it obtains record itself and return 
+--records to main query 
+--whereas
+--in Correlated SQ  Main query obtain and pass records to inner query which then exceute it as per passed values and 
+--returns the result to the outer query for final processing
+
+--In Correlated SQ it uses Exists() function 
+--whereas 
+--in Non Co SQ inner query can be written inside where or having clause
+
+--2. What are Sub Queries? Why do we use sub query?
+--Ans
+--A SubQuery is a query within another SQL query and appears within Where or Having Clause.
+--A subquery can be any SELECT statement directly related or not to the main select statement
+--It is used to return data to main query as a condition  to further restrict the data to be retrieved.
+
+--3. Why do we use Temporary Tables? How long they last in a database? How to create a temporary table?
+--Ans:
+--Temporary tables are used to create table temporarily which we dont require permanatly and only last for one
+--session only, hence it helps us in not blocking database memory unnnecesarily. It is created in temp database
+--and lasts only for current session. Creating it and all the other thing works same as normal table, the only
+--diffrence is that the name of temporary table starts with '#'
+--Still it block the memory for current session hence not considered efficient
+--syntax:
+--create table #table_name (col_nme database)
+--insert into #table_name values( values...)
+
+
+
+--4. What is Common Table Expressions (CTE)? Why do we use them? How to create a CTE?
+--Ans:
+--A CTE or common table expression is just an expression not the real table which store the the result. 
+--The existence of an CTE is limited to the execution of the sql statement so the cte cannont be found in database
+--Since it exists for one execution therfore it block the memory for same time only and hence it helps us in saving
+--memory of data base . 
+--It is created by WITH clause
+--Restriction: all aggregate function within cte must have alias name
+--syntax:
+--WITH cte_name as( select statement ) select statement using cte
+
+
+--5. What are Derived Tables? How to create Derived Tables?
+--Ans:
+--Derived table or Virtual table are created when a SELECT statement is embebed within FROM clause. 
+--A select statement returns set of result, but no name exists for the result set to be referenced within a query
+--This issue can be resolved by wrapping entire select statemnet into a parenthesis and specifying
+--it as an alias. 
+--So basiacally derived table is not a table present in database but its a result set derived from
+--SELECT statement within FROM clause with an alias name which can be used in a query  
+--Syntax:
+--SELECT col_list
+--FROM (SELECT  statement) as derived_table_name
+
+--6. What Exists() Function do? 
+--Ans:
+--The EXISTS() is used to return a row to main outer query when any records are returned by a SubQuery.
+--It is often used in Correlated SubQuery to copy the behaviour of JOIN and are implemented to perform
+--queries which cannot be possible with standrd join
+--synatx
+--select col_list
+--from table_name1 
+--where EXISTS(select column list from table_name2 as t2 [ where codition])
+--Example:
+
+
+--(Use AdventureWorks2008 for writing all your Queries)
+--7. Write a SELECT Query to compare the price paid for a product with the average price of
+--all product sales from Sales.SalesOrderDetail table . 
+--Columns to be selected : Productid, UnitPrice, Average of UnitPrice. calculate the difference between this row ’ s 
+--Unitprice and the average for all UnitPrice
+
+
+select  Avg(UnitPrice) as Average_Unit_price
+from Sales.SalesOrderDetail
+
+select  distinct productid, unitprice
+from Sales.SalesOrderDetail order  by ProductID
+
+
+select  Productid, Unitprice, Avg(UnitPrice) as Average_Unit_price
+from Sales.SalesOrderDetail group by  ProductID, UnitPrice order by ProductID
+
+--CTE
+With temp as(
+		select productid, avg(unitprice) as average, UnitPrice
+		from Sales.SalesOrderDetail 
+		group by  ProductID)
+							select s.productid, temp.unitprice, average
+							from Sales.SalesOrderDetail as s
+							inner join temp
+							on temp.ProductID=s.ProductID
+							order by ProductID
+
+
+--Scalar
+select distinct productid, unitprice, 
+(select avg(unitprice) from Sales.SalesOrderDetail) as avg_up,
+(UnitPrice-(select avg(unitprice) from Sales.SalesOrderDetail)) as diff_up
+from sales.salesorderdetail
+order by ProductID
+
+
+
+
+
+
+--(Use AdventureWorks2008 for writing all your Queries)
+--9. Write a Query to return all productid, name used in production.product which are also used in sales.salesOrderDetail.
+select top 3* from Production.Product
+select top 3* from sales.salesOrderDetail
+select count (*) as cnt  from sales.salesOrderDetail
+
+--Using Join
+select distinct pp.ProductID, name --266 record with distinct, without distinct above 1 lakh
+from Production.Product as pp
+inner join Sales.SalesOrderDetail as sod
+on pp.ProductID=sod.ProductID 
+
+--Using Non-Correlated Sub Query
+select ProductID, name 
+from Production.Product
+where ProductID in(
+					select ProductID 
+					from Sales.SalesOrderDetail)
+
+
+--Using Correlated  Sub Query
+select ProductID, name 
+from Production.Product as pp
+where exists(
+			select * 
+			from Sales.SalesOrderDetail as so 
+			where pp.ProductID=so.ProductID)
+
+--11. Write a Query that returns productid, name and their corresponding list price for all products that have 
+--been sold (Use Production.product and Sales.SalesOrderDetail and write a correlated query)
+
+--Using Join
+select distinct pp.productid, name, ListPrice 
+from Production.Product as pp
+inner join Sales.SalesOrderDetail as sod
+on pp.ProductID=sod.ProductID
+
+select top 5 * from Sales.SalesOrderDetail
+select top 5 * from Production.Product
+
+--using Non-Correlated  Sub Query
+select ProductID,name,ListPrice 
+from Production.Product
+where ProductID in (
+					select ProductID 
+					from Sales.SalesOrderDetail)
+
+--Using Correlated  Sub Query
+select  pp.productid, name, ListPrice 
+from Production.Product as pp 
+where exists(
+			select * from Sales.SalesOrderDetail as so
+			where pp.ProductID=so.ProductID)
+
+
+--12. Write a Query which returns productid, name where productsubcategoryid is 1 and productid is present in 
+--Production.Product and Sales.SalesOrderDetail
+
+
+--From Joins
+select distinct pp.productid, name
+from Production.Product as pp
+inner join Sales.SalesOrderDetail as sod
+on pp.ProductID=sod.ProductID
+where ProductSubcategoryID =1
+
+
+--From Non-Correlated  Sub Query
+select distinct ProductID,name from Production.Product
+where ProductID in(
+					select ProductID 
+					from Sales.SalesOrderDetail 
+					where ProductSubcategoryID=1)
+
+--Using Correlated  Sub Query
+select distinct pp.productid, name
+from Production.Product as pp 
+where exists (
+			select * from 
+			Sales.SalesOrderDetail as sd
+			where pp.ProductID=sd.ProductID and ProductSubcategoryID=1)
+
+
+
+--10. Write a Query to return productid, name that were ordered in July 2005. Use Tables Production.product, 
+--Sales.SalesOrderDetail and Sales.SalesOrderHeader. (Write using nested Sub-query and joins seperately).
+
+--From Joins
+select distinct pp.productid, name
+from Production.Product as pp
+inner join Sales.SalesOrderDetail as sod
+on pp.ProductID=sod.ProductID
+inner join Sales.SalesOrderHeader as soh
+on sod.SalesOrderID=soh.SalesOrderID
+where OrderDate between '07-01-2005' and '07-31-2005'
+
+
+--From Non-Correlated  Sub Query
+select distinct ProductID, name 
+from Production.Product
+where ProductID in(
+					select ProductID 
+					from Sales.SalesOrderDetail 
+					where SalesOrderID in(
+											select SalesOrderID 
+											from Sales.SalesOrderHeader
+											where OrderDate between '07-01-2005' and '07-31-2005'))
+
+--Using Correlated  Sub Query
+select pp.ProductID,name 
+from Production.Product as pp
+where exists(
+			select * 
+			from Sales.SalesOrderDetail as sd
+			where exists(
+						select * 
+						from Sales.SalesOrderHeader as sh 
+						where sd.SalesOrderID = sh.SalesOrderID 
+						and OrderDate between '07-01-2005' and '07-31-2005')
+						and pp.ProductID=sd.ProductID)
+
+
+--8. Write a Query to return the name of products, product ID that have generated sales exceeding two million dollars. 
+--Use Tables Production.Product and Sales.SalesOrderDetail (use Exists function, Write Query using Sub-Query and CTE)
+
+--Using Join
+select  pp.productid,name, sum(unitprice) as unit
+from Production.Product as pp
+inner join Sales.SalesOrderDetail as s
+on pp.ProductID=s.ProductID
+group by pp.ProductID,name
+having (sum(unitprice)>2000000)
+
+--Using Non-Correlated  Sub Query
+select distinct ProductID,name 
+from Production.Product
+where ProductID in(Select ProductID 
+				   From Sales.SalesOrderDetail
+				   Group by Productid
+				   Having sum(unitprice)>2000000
+					)
+
+--Using Correlated  Sub Query
+select pp.productid, name 
+from Production.Product as pp
+where exists (
+				select * 
+				from Sales.SalesOrderDetail as sd 
+				where pp.ProductID=sd.ProductID
+				group by sd.productid
+				--GROUP BY expression must contain at least one column that is not an outer reference.
+				having sum(unitprice)>2000000
+				)
