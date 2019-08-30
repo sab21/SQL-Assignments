@@ -1,0 +1,190 @@
+--PIVOT rotates a table-valued expression by turning the unique values from one column 
+--in the expression into multiple columns in the output, and performs aggregations 
+--where they are required on any remaining column values that are wanted in the final output.
+--In easier words using PIVOT you can transform unique row values to column header.
+
+
+--Syntax
+--SELECT <non-pivoted column>,  
+--    [first pivoted column] AS <column name>,  
+--    [second pivoted column] AS <column name>,  
+--    ...  
+--    [last pivoted column] AS <column name>  
+--FROM  
+--    (<SELECT query that produces the data>)   
+--    AS <alias for the source query>  
+--PIVOT  
+--(  
+--    <aggregation function>(<column being aggregated>)  
+--FOR   
+--[<column that contains the values that will become column headers>]   
+--    IN ( [first pivoted column], [second pivoted column],  
+--    ... [last pivoted column])  
+--) AS <alias for the pivot table>  
+--<optional ORDER BY clause>; 
+
+
+
+CREATE TABLE Product_Pivot
+(Cust VARCHAR(25), Product VARCHAR(20), QTY INT)
+
+
+-- Inserting Data into Table
+INSERT INTO Product_Pivot(Cust, Product, QTY)
+VALUES('KATE','VEG',2),
+	  ('KATE','SODA',6),
+	  ('KATE','MILK',1),
+	  ('KATE','BEER',12),
+      ('FRED','MILK',3),
+      ('FRED','BEER',24),
+      ('KATE','VEG',3)
+
+-- Selecting and checking entires into table
+SELECT *
+FROM Product_Pivot
+
+
+
+CREATE TABLE COUNTRY_SALES_INFO
+(Country   varchar(50),
+ Year int NOT NULL,
+ SalesAmount   FLOAT
+)
+
+INSERT  INTO COUNTRY_SALES_INFO  (Country,   Year, SalesAmount)   
+VALUES ('Australia', 2005, 1309047.1978),
+('Germany', 2006, 521230.8475),
+('United States',   2007, 2838512.3550),
+ ('France', 2008, 922179.0400),
+('Australia', 2007, 3033784.2131),
+('France', 2005, 180571.6920),
+ ('United Kingdom',   2006, 591586.8540),
+ ('Canada', 2006, 621602.3823),
+ ('United Kingdom',   2005, 291590.5194),
+('United States',   2005, 1100549.4498),
+ ('Canada', 2007, 535784.4624),
+('France', 2007, 1026324.9692),
+('Germany', 2007, 1058405.7305),
+ ('Australia', 2006, 2154284.8835),
+('United Kingdom',   2008, 1210286.2700),
+('United States',   2008, 3324031.1600),
+('Germany', 2008, 1076890.7700),
+('United Kingdom',   2007, 1298248.5675),
+('Australia', 2008, 2563884.2900),
+('Canada', 2005, 146829.8074),
+('Germany', 2005, 237784.9902),
+('Canada', 2008, 673628.2100),
+ ('United States',   2006, 2126696.5460),
+('France', 2006, 514942.0131)
+
+
+
+SELECT *
+FROM Product_Pivot
+
+--Q1
+--Pivoting Product_Pivot PER UNIQUE VALUE OF PRODUCT
+SELECT cust,[VEG],[SODA],[MILK],[BEER]
+FROM (SELECT * FROM Product_Pivot)AS A
+PIVOT (SUM(QTY) FOR PRODUCT IN ([VEG],[SODA],[MILK],[BEER])) AS PVT1
+
+--Pivoting Product_Pivot PER UNIQUE VALUE OF CUSTOMER
+SELECT PRODUCT,[KATE],[FRED]
+FROM (SELECT CUST,QTY,PRODUCT FROM Product_Pivot) AS A
+PIVOT (SUM(QTY) FOR CUST IN ([KATE],[FRED])) AS PVT1
+
+
+select *
+from country_sales_info
+
+SELECT DISTINCT COUNTRY FROM COUNTRY_SALES_INFO
+
+--PIVOTING PER UNIQUE  VALUES OF COUNTRY
+SELECT YEAR,
+[Australia],
+[Canada],
+[France],
+[Germany],
+[United Kingdom],
+[United States]
+FROM (SELECT * FROM COUNTRY_SALES_INFO) AS A
+PIVOT ( SUM(SALESAMOUNT) FOR COUNTRY IN ([Australia],
+[Canada],
+[France],
+[Germany],
+[United Kingdom],[United States])) AS PVT 
+
+
+Demonstration2:
+
+USE AdventureWorks2008
+SELECT DaysToManufacture, StandardCost
+FROM Production.Product
+		
+SELECT DISTINCT DaysToManufacture
+FROM Production.Product
+
+SELECT 'DAYS FOR MANUFACTURE' AS AVGDaysToManufacture, [0],[1],[2],[3],[4]
+FROM (SELECT DaysToManufacture,STANDARDCOST  FROM ProductiON.Product) AS A
+PIVOT(AVG(STANDARDCOST) FOR DaysToManufacture IN ([0],[1],[2],[3],[4])) AS PVT
+
+--Assignment2:
+
+USE AdventureWorks2008
+SELECT PurchaseOrderID, EmployeeID, VendorID  
+FROM Purchasing.PurchaseOrderHeader
+
+SELECT DISTINCT EmployeeID 
+FROM Purchasing.PurchaseOrderHeader
+
+--[250] AS Emp1, [251] AS Emp2, [256] AS Emp3, [257] AS Emp4, [260] AS Emp5
+
+SELECT VendorID, [250] AS Emp1, [251] AS Emp2, [256] AS Emp3, [257] AS Emp4, [260] AS Emp5
+FROM (SELECT PurchaseOrderID, EmployeeID, VendorID FROM Purchasing.PurchaseOrderHeader) AS A
+PIVOT (COUNT(PurchaseOrderID) FOR EmployeeID IN([250], [251], [256], [257], [260])) AS PVT
+
+
+
+--Demonstration3:
+select *
+from country_sales_info
+
+select distinct year
+from country_sales_info
+
+--pivoting for unique year
+SELECT country,[2005],[2006],[2007],[2008]
+FROM (SELECT * FROM country_sales_info) AS A
+PIVOT(SUM(SalesAmount) for Year in ([2005],[2006],[2007],[2008])) as pvt
+
+
+--Assignment3:
+USE AdventureWorksLT2012
+SELECT *
+FROM SalesLT.ProductCategory -- Name
+
+SELECT *
+FROM SalesLT.Product -- color
+
+select distinct ProductCategoryID from SalesLT.Product -- 41
+select distinct color from SalesLT.Product
+
+
+select name as Product_Name,[Red],[Blue],[Black], [Silver],[Yellow],[Grey],[Multi],[NULL] as Uncolored
+FROM
+	(select P.ProductID, pc.name, color
+	from SalesLT.ProductCategory as pc
+	inner join SalesLT.Product as p
+	on pc.ProductCategoryID=p.ProductCategoryID) as A
+pivot	(count(ProductID) for color in
+		([NULL],[Black], [Blue],[Grey],[Multi],[Red],[Silver],[Silver/Black],[White],[Yellow])) as pvt
+
+
+select name as Product_Name,[Red],[Blue],[Black], [Silver],[Yellow],[Grey],[Multi],[Uncolored]
+FROM
+	(select P.ProductID, pc.name, ISNULL(color,'Uncolored') as Color
+	from SalesLT.ProductCategory as pc
+	inner join SalesLT.Product as p
+	on pc.ProductCategoryID=p.ProductCategoryID) as A
+pivot	(count(ProductID) for color in
+		([Uncolored],[Black], [Blue],[Grey],[Multi],[Red],[Silver],[Silver/Black],[White],[Yellow])) as pvt
