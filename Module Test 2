@@ -1,0 +1,193 @@
+use sqlmt2
+select * from employee_table
+select * from project_table
+select * from Emp_mag
+select * from customer_test_table
+select * from Order_table
+select * from ORDERDETAIL
+
+
+--Questions.
+--1. Get employee name,project name,order by first name from employee detail and project detail for those 
+--employee even they have not assign project.(5 marks)
+select CONCAT(first_name,' ',last_name) as Employee_Name, projectname as Project_Name
+from employee_table as e
+left join project_table as p
+on e.employee_id = p.employeedetailid
+order by first_name
+
+
+--2. Get the employee first_name and last_name whose salary is greater then Average salary of all the employee. (5 marks)
+select * from employee_table
+
+select first_name,last_name
+from employee_table
+where salary>(select avg(salary) from employee_table)
+
+
+--3. Find the name of the employee who gets the 3rd highest salary.(Employee table) (5 marks)
+select CONCAT(first_name,' ',last_name) as Employee_Name
+from(select *,DENSE_RANK()over(order by salary desc) as rno from employee_table) as a
+where a.rno=3
+
+--4. Get employee name,project name,order by first name from employee detail and project detail for 
+--those employee who have been assigned a project.
+--(5 marks)
+select * from employee_table
+select * from project_table
+
+select CONCAT(first_name,' ',last_name) as Employee_Name, projectname as Project_Name
+from employee_table as e
+inner join project_table as p
+on e.employee_id = p.employeedetailid
+order by first_name, project_name
+
+--5. write query to fetch project name on which more than one employee is working along with employee name. (5 marks)
+select * from employee_table
+select * from project_table
+
+--select projectname
+--from (select *,count(projectname) over( partition by projectname) as cnt from project_table) as a
+--where a.cnt>1
+
+with cte as(select *,count(projectname) over( partition by projectname) as cnt from project_table)
+select projectname as Project_Name,CONCAT(first_name,' ',last_name) as Employee_Name
+from cte 
+inner join employee_table as e
+on e.employee_id=cte.employeedetailid
+where cnt>1
+order by Project_Name
+
+
+
+--6. Get the customer name ,order type and total no of orders on each day using derived table. (5 marks)
+select * from customer_test_table
+select * from Order_table
+select * from ORDERDETAIL
+
+
+select name as Name, type as Order_type, sum(orders_per_day) as total_orders
+from(
+	select name, order_date,COUNT(ORDER_DATE) as orders_per_day,type  from customer_test_table as c
+	inner join ORDERDETAIL as od
+	on c.id=od.CUST_ID
+	inner join Order_table as ot
+	on ot.ID=od.ORDERDETAILID group by name,ORDER_DATE, type) as a
+group by name, type
+
+
+
+--select name as Name, ORDER_TYPE,a.customer_test_table
+--from
+--(select name, order_date,COUNT(ORDER_DATE) as orders_per_day  from customer_test_table as c
+--inner join ORDERDETAIL as od
+--on c.id=od.CUST_ID
+--inner join Order_table as ot
+--on ot.ID=od.ORDERDETAILID group by name,ORDER_DATE) as a
+--group by ORDER_DATE
+
+
+--7. Write a query to find the Employee name and manager name.--(5 marks)
+select * from Emp_mag
+
+select a.emp_name as Employee_Name, b.emp_name as Manager_Name
+from Emp_mag as a
+left join Emp_mag as b
+on b.emp_id=a.emp_manager_id
+
+
+--8. Create a stored Procedure that will pass 3 integer parameters. Print the Largest number among them. (5 marks)
+
+alter procedure usp_largest_among3 (@a int, @b int, @c int)
+as 
+begin
+print @a
+print @b
+print @c
+if(@a>@b)
+	begin
+	if(@a>@c)
+		begin
+		print cast(@a as varchar(5)) + ' is largest among the three.'
+		end
+	else
+		begin
+		print cast(@c as varchar(5)) + ' is largest among the three.'
+		end
+	end
+else if(@b>@c)
+	begin
+	print cast(@b as varchar(5)) + ' is largest among the three.'
+	end
+else
+	begin
+	print cast(@c as varchar(5)) + ' is largest among the three.'
+	end
+end
+
+
+exec usp_largest_among3 7,5,6
+exec usp_largest_among3 7,8,6
+exec usp_largest_among3 7,5,9
+exec usp_largest_among3 8,9,9
+
+--9. Construct a stored procedure, named usp_ORDERDETAILBYTYPE, that accepts one input parameter 
+--named TYPE and returns (using a SELECT Transact-SQL statement) the ID,NAME and TYPE. (2.5 marks)
+alter procedure usp_ORDERDETAILBYTYPE(@TYPE varchar(15))
+as
+begin
+declare @a varchar(15)
+set @a=@type
+select distinct id as Customer_ID, name as Customer_Name, Type
+from ORDERDETAIL as o
+inner join customer_test_table as c
+on o.CUST_ID=c.id
+where type=@TYPE
+end
+
+exec usp_ORDERDETAILBYTYPE 'Direct'
+exec usp_ORDERDETAILBYTYPE 'Indirect'
+exec usp_ORDERDETAILBYTYPE 'Magazine'
+
+
+
+--10. Construct a stored procedure, named usp_employeebygender, that accepts two input parameters named department, 
+--gender and returns (using a SELECT Transact-SQL statement) department, gender and count of gender within 
+--each department from the table. (2.5 marks)
+alter procedure usp_employeebygender(@department varchar(10), @gender varchar(10))
+as
+begin
+declare @d varchar(10),@g varchar(10)
+set @d=@department
+set @g=@gender
+select department,gender,count(gender) as gender_count
+from employee_table
+group by department,gender
+having department=@d and gender = @g
+end
+
+exec usp_employeebygender 'HR','Male'
+exec usp_employeebygender 'HR','Female'
+exec usp_employeebygender 'IT','Male'
+
+
+--11. Generate following report using OrderDetail and Customer Table.(5 marks)
+
+select * from ORDERDETAIL
+select * from customer_test_table
+
+select name as NAME,
+isnull(cast(sum(Direct) as char),'Not Ordered') as Direct,
+isnull(cast(sum(Magazine) as char),'Not Ordered') as Magazine, 
+isnull(cast(sum(Indirect) as char),'Not Ordered') as Indirect
+from
+	(select name as Name,[Direct] ,[Magazine],[Indirect]
+	from
+		(select * from customer_test_table as c
+		inner join ORDERDETAIL as o
+		on c.id=o.CUST_ID) as a
+	pivot (sum(quantity)for type in([Direct],[Magazine],[Indirect])) as pvt) as b
+group by b.Name
+
+
+
