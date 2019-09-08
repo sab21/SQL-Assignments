@@ -1,0 +1,240 @@
+--Views Index Stored Procedures Triggers and Cursors Assignment
+--Please write SQL queries/commands/explanation for the following and give the
+--suggested output for each query:
+
+--1. What are Views? What are the advantages of using views?
+--Ans
+--Views are are virtual table. They do not really store any data. 
+--They only contain references of column from the main table as per the select clause
+--Advantages:
+--	1. Reduce apparent database complexity
+--	2. Prevent sensitive columns from being selected
+--	3. Optimise storage space
+--	4. Speed query peformance
+--Syntax:
+	Create View View_name
+	as 
+	select statement
+
+--2. Create a View for any existing table you have.
+
+select * from customer
+--Creating View on customer
+Create View VW_customer as
+select CID,Order_id,Price_paid
+from customer
+where LOCATION in ('Bangalore','Hyderabad')
+
+select * from VW_customer
+
+
+--3. Is it possible to make changes in the view? If yes the explain with the help of example
+--how changes can be made.
+--Ans
+--Yes it is possible to alter views with ALTER command.
+--It can also be modified from object explores
+--e.g
+Alter View VW_customer
+as
+select CID,Order_id,Location,Price_paid
+from customer
+where LOCATION in ('Bangalore','Hyderabad','Pune')
+
+select * from VW_customer
+
+--4. Can we drop the view? If yes, then how?
+--Yes we can also drop view as we drop any object in SQL
+
+Drop view VW_customer
+
+
+--5. What are Indexes? What are the advantages of using Indexes? When by default indexes
+--are created?
+--Ans
+--Indexes are database objects which can not be seen by users. 
+--It acts Just like an index of book to retrieve data data faster.
+--It helps in organising relevent data structure to minimize data comparison
+--It helps in improve Query Performance
+--By default indexes are created on Primary Key and Unique constarints columns
+--In Primary Key Clustered Index are created by default and 
+--in Unique key constarint Non Clustered Index are craeted by default
+
+--Note: To update a table with indexes takes more time than non indexed table becozbindex also nedds to be updated
+--		So avoid creating index on table which are subjected to frequent change or update
+
+--6. Discuss Different Types of indexes? When Clustered Indexes and Non Clustered Indexes
+--can be used?
+--Ans
+--There are two type of Indexes
+--1. Clustered Index
+--2. NonClustered Index
+--1. Clustered Index:
+--	In clustered index, data in the table are physically sorted, 
+--	means when new row is inserted, it physically goes to the place determined by index
+--	Only one CI is allowed per table
+--	It works on Binary Tree principle
+--	By default created on Primary Key column
+--  Clustered Index are used in following cases
+--	Columns that contain a large number of distinct values.
+--	Queries that return a range of values using operators such as BETWEEN, >, >=, <, and <=.
+--	Columns that are accessed sequentially.
+--	Queries that return large result sets.
+--	Columns that are frequently accessed by queries involving join or GROUP BY clauses; typically these are foreign key columns. 
+--  Clustered Index should be avoided in following cases
+--	columns which undergo changes frequently
+--	Columns with wide keys
+
+--2.Non Clustered Index
+--	In non clustered index, data values are not physically sorted but logically sorted and 
+--	Index plays the role of  “pointer to row”, allowing faster access to row that is requested.  
+--	It is just like the index of a book. It contains data sorted so that it’s easy to find, 
+--	then once found, it points back to the actual page that contains the data.
+--	More than 1 NON CI are allowed (max 255)
+--  Syntax:
+--    CREATE    CLUSTERED  INDEX  index_name
+--	ON  table_name  (Column_name)
+
+--  Where to use Non CI
+--	Columns that contain a large number of distinct values, such as a combination of last name and first name
+--	Queries that do not return large result sets.
+--	Columns frequently involved in search conditions of a query (WHERE clause) that return exact matches.
+--	Decision-support-system applications for which joins and grouping are frequently required.
+--	Covering all columns from one table in a given query
+--  Syntax:
+--    CREATE    [ NONCLUSTERED ]  INDEX  index_name
+--	ON  table_name  (Column_name)
+-----------------------------------------Q6 Ends-------------------------------------------------------
+
+--7. What are Stored Procedures (SPs) and why do we use it?
+--Ans
+--A stored Procedures is set of SQL statements with an assigned name to perform certain task,
+--which can be saved in the database and  can be used again and  again.
+--If any SQL queries is required to write over and over again, then it can be saved as 
+--stored procedure and then call it to execute it.
+--Syntax:
+--SP SYNTAX:    
+--	CREATE PROCEDURE procedure_name
+--	(@Variable_name1 datatype1, 
+--		@Variable_name2 datatype2,…)
+--	AS
+--	BEGIN
+--	DECLARE @variable3 datatype3
+--	SET OF SQL STATEMENTS AND SCRIPTS
+--	…
+--	END
+
+
+--8. How to invoke Stored Procedure (SP)? How we can see the code of any SP?
+--Ans
+--A stored procedure can be invoked by EXEC clause 
+--syntax:
+--EXEC USP_Name value1,value2,.....
+
+--To see the code of any USP, sp_helptext is used
+--syntax
+--sp_helptext USP_name
+
+
+--9. What are Triggers? Discuss three types of Triggers?
+--10. When After/For and Instead of Triggers are used?
+--11. What are cursors? When we can use cursors? When cursors should not be used?
+--12. Create Clustered Index and Non-Clustered Index on any table.
+select * from cust_info
+--Creating CI on custid if cust_info
+Create Clustered Index CI_CustInfo_custid
+on cust_info(custid)
+
+Drop Index CI_CustInfo_custid on  cust_info
+
+Create Clustered Index CI_CustInfo_orderid
+on cust_info(orderid)
+
+--Creating Non Clustered Index on cust info
+Create NONCLUSTERED Index NCI_custinfo_custid
+on cust_info(custid)
+
+Create Index NCI_custinfo_cid
+on cust_info(cid)
+
+
+
+--13. Create a Calculator for arithmetic operations by creating a Stored Procedure for it.
+--Solution
+create procedure usp_calculator(@n1 float, @op varchar(2), @n2 float)
+as
+begin
+declare @result float
+if(@op = '+')
+	begin
+	set @result=@n1+@n2
+	print (cast (@n1 as varchar(10))+' '+@op+' ' + cast (@n2 as varchar(10)) + ' = '+cast (@result as varchar(10)))
+	end
+else if(@op = '-')
+	begin
+	set @result=@n1-@n2
+	print (cast (@n1 as varchar(10))+' '+@op+' ' + cast (@n2 as varchar(10)) + ' = '+cast (@result as varchar(10)))
+	end
+else if(@op = '*')
+	begin
+	set @result=@n1*@n2
+	print (cast (@n1 as varchar(10))+' '+@op+' ' + cast (@n2 as varchar(10)) + ' = '+cast (@result as varchar(10)))
+	end
+else if(@op = '/')
+	begin
+	set @result=@n1/@n2
+	print (cast (@n1 as varchar(10))+' '+@op+' ' + cast (@n2 as varchar(10)) + ' = '+cast (@result as varchar(10)))
+	end
+else 
+	begin
+	print 'Enter Valid Operator'
+	end
+END
+
+EXEC usp_calculator 20,'+',10
+EXEC usp_calculator 20,'-',10
+EXEC usp_calculator 20,'*',10
+EXEC usp_calculator 20,'/',10
+EXEC usp_calculator 20,'%',10
+
+
+--14. Create a Stored Procedure to create email ids by using first name dot first 3 characters
+--of last name @nikhilanalytics.com. For eg. if first name is manoj and last name is kumar
+--then email id generated will be manoj.kum@nikhilanalytics.com. First name, last name
+--and email id every time should be stored in Email_contact Table.
+--Solution
+create table Email_contact(
+First_name varchar(15) not null, Last_name varchar(15) not null, Mail_ID varchar(30) not null)
+
+alter table Email_contact
+alter column Mail_ID varchar(40) not null
+
+Create Procedure usp_mail_id_generator (@fn varchar(15), @ln varchar(15))
+as
+begin
+declare @result  varchar(40)
+set @result = CONCAT(@fn,'.',left(@ln,3),'@nikhilanalytics.com')
+
+insert into Email_contact
+values(@fn,@ln,@result)
+
+print 'First Name: ' + @fn
+print 'Last Name: '+@ln
+print 'Mail Id: ' + @result
+
+END
+
+exec usp_mail_id_generator 'Manoj', 'Kumar'
+
+select *  from Email_contact
+
+--15. Create Table Emp_test with columns emp_id int, ename Varchar(20) , salary float.
+--Create an After Insert Trigger on Emp_test. Trigger should fire a code to insert Emp_id,
+--Ename, Salary , Audit_Action ,Timestamp to Emp_Audit table.
+--16. Create an Instead of Triggers on any table. If some one tries to insert any record in the
+--table, trigger should fire a code to which will print “You are not allowed to insert
+--records”.
+--17. Update all the rows of your Salary Table on the basis of Designation using Cursors.
+--If Designation is CEO salary should increase to 5%, If Designation is President salary
+--should increase to 7%, If Designation is VP salary should increase to 9%, If Designation is
+--SSE salary should increase to 10%, If Designation is Business Analyst salary should
+--increase to 15% for rest salary should increase to 20%.
