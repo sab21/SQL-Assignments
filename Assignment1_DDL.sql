@@ -71,6 +71,6 @@ truncate emp
 
 
 ------------Q8----------------------
--- Unique key constarint means the data in that field should be unique means there is no duplicate value.
+-- Unique key constarint means the data in that field should be unique means there is no duplicate value..
 
 
