@@ -136,8 +136,61 @@ Drop view VW_customer
 
 
 --9. What are Triggers? Discuss three types of Triggers?
+--Ans
+--A trigger is a special type of stored procedure that automatically runs when an event occurs in the database server.
+--Its a special kind of stored procedure stored and managed by DBMS
+--There are three kind of triggers
+--	1. DDL trigger: fire on response to some changes in structure of database such as create,alter,drop
+--	2.DML Trigger: fire on insert, update and delete
+--		Note: No trigger for Select clause
+--	3. Logon Trigger: fire in response of logon events
+--		event is raises when user session is established with instance sql server
+
 --10. When After/For and Instead of Triggers are used?
+--Ans
+--After/For Triggers are used when we need to fire the trigger after the execution of some SQL query.	
+--Means it trigger after succesfull execution of DDL or DML command
+
+--Instead of triggers fire before the execution of an action query that can only be DML statements like 
+--Insert, Update and Delete but after the execution of that query. The table data will not be affected, 
+--in other words if you want to insert or update the data of the table then you need to write it in the 
+--trigger using "inserted" or "deleted" virtual tables
+
 --11. What are cursors? When we can use cursors? When cursors should not be used?
+--ANS
+--A SQL cursor is a database object which is used to retrieve data from a result set one row at a time. 
+--A SQL cursor is used when the data needs to be updated row by row.
+
+--In relational databases, operations are made on a set of rows. For example, a SELECT statement returns 
+--a set of rows which is called a result set. Sometimes the application logic needs to work with one row at 
+--a time rather than the entire result set at once. This can be done using cursors.
+--In programming, we use a loop like FOR or WHILE to iterate through one item at a time, 
+--the cursor follows the same approach and might be preferred because it follows the same logic.
+
+--CURSOR LIMITATIONS
+--A cursor is a memory resident set of pointers -- meaning it occupies memory from your system that may be available for other processes.
+--Cursors can be faster than a while loop but they do have more overhead.
+--Another factor affecting cursor speed is the number of rows and columns brought into the cursor. 
+--Time how long it takes to open your cursor and fetch statements.
+--Too many columns being dragged around in memory, which are never referenced in the subsequent cursor operations, can slow things down.
+--The cursors are slower because they update tables row by row.
+
+--Therefore it should be avoided 
+--	where multiple database activities are in process simulatneously
+--	when theres is large dat set
+
+
+--Synntax:
+--	DECLARE cursor_name CURSOR
+--	[ LOCAL | GLOBAL ]
+--	[ FORWARD_ONLY | SCROLL ]
+--	[ STATIC | KEYSET | DYNAMIC | FAST_FORWARD ]
+--	[ READ_ONLY | SCROLL_LOCKS | OPTIMISTIC ]
+--	[ TYPE_WARNING ]
+--	FOR select_statement
+--	[ FOR UPDATE [ OF column_name [ ,...n ] ] ]
+
+
 --12. Create Clustered Index and Non-Clustered Index on any table.
 select * from cust_info
 --Creating CI on custid if cust_info
@@ -230,11 +283,116 @@ select *  from Email_contact
 --15. Create Table Emp_test with columns emp_id int, ename Varchar(20) , salary float.
 --Create an After Insert Trigger on Emp_test. Trigger should fire a code to insert Emp_id,
 --Ename, Salary , Audit_Action ,Timestamp to Emp_Audit table.
+
+--Creating Tables
+create table emp_test(
+	emp_id varchar(10) not null,
+	cname varchar(20) not null,
+	salary float not null)
+
+
+create table emp_audit(
+	emp_id varchar(10) not null,
+	cname varchar(20) not null,
+	salary float not null,
+	user_name varchar(50),
+	audit_action varchar(100) not null,
+	time_stamp datetime not null)
+
+---TRIGGER STARTS HERE
+Create Trigger TRG_emptest_after_insert
+on emp_test
+after insert 
+as
+Declare @eid varchar(10), @name varchar(20), @sal float, @audit varchar(100)--, @user varchar(50)
+
+Select @eid  = i.emp_id from inserted as i
+Select @name  = i.cname from inserted as i
+Select @sal  = i.salary from inserted as i
+Select @audit = 'User has Logged in information'+suser_name()+' at '+cast(getdate() as varchar(30))
+
+Insert into emp_audit(emp_id,cname,salary,user_name,audit_action,time_stamp)
+Select @eid, @name, @sal, SUSER_NAME(), @audit, getdate()
+
+---TRIGGER ENDS HERE
+
+Insert into emp_test
+select 'AE2011','Ajay Kumar',49500
+
+Insert into emp_test
+select 'AE2012','Amit Kumar',48500
+
 --16. Create an Instead of Triggers on any table. If some one tries to insert any record in the
 --table, trigger should fire a code to which will print “You are not allowed to insert
 --records”.
+--Sol
+select * from customer
+
+--trigger starts here
+create trigger trg_customer_insteadof_insert
+on customer
+instead of insert 
+as 
+print 'YOU ARE NOT ALLOWED TO FURTHER INSERT RECORDS IN CUSTOMER TABLE'
+--tigger ends
+
+insert into customer
+select 'AE201254', 'Vija', 'BLR', 12546,GETDATE(), 35623
+
+
 --17. Update all the rows of your Salary Table on the basis of Designation using Cursors.
 --If Designation is CEO salary should increase to 5%, If Designation is President salary
 --should increase to 7%, If Designation is VP salary should increase to 9%, If Designation is
 --SSE salary should increase to 10%, If Designation is Business Analyst salary should
 --increase to 15% for rest salary should increase to 20%.
+
+select * from salary_info
+
+----cursor starts here
+declare CUR_SAL cursor
+For select emp_id , designation from salary_info
+declare @id varchar(10), @desig varchar(30)
+
+open Cur_sal
+
+fetch next from cur_sal into @id, @desig
+
+while(@@FETCH_STATUS = 0)
+	Begin
+	If (@desig = 'CEO')
+	Update salary_info
+	set salary=1.05*salary
+	where emp_id=@id
+
+	else if(@desig = 'President')
+	Update salary_info
+	set salary=1.07*salary
+	where emp_id=@id
+
+	else if(@desig = 'VP')
+	Update salary_info
+	set salary=1.09*salary
+	where emp_id=@id
+
+	else if(@desig = 'SSE')
+	Update salary_info
+	set salary=1.1*salary
+	where emp_id=@id
+
+	else if(@desig = 'Business Analyst')
+	Update salary_info
+	set salary=1.15*salary
+	where emp_id=@id
+
+	else
+	Update salary_info
+	set salary=1.2*salary
+	where emp_id=@id
+
+	Fetch Next From cur_sal into @id, @desig
+	End
+
+Close cur_sal
+Deallocate cur_sal
+
+--Cursor End
