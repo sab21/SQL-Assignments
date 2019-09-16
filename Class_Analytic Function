@@ -135,7 +135,7 @@ FROM Sales.SalesOrderDetail s
 WHERE SalesOrderID IN (43670, 43669, 43667, 43663)
 ORDER BY SalesOrderID
 
---Lead() function:
+--Lead() function::
 --Accesses data from a subsequent row in the same result set.
 
 --Lag() function:
