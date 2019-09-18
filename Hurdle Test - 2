@@ -1,0 +1,261 @@
+--SQL Hurdle Test 2
+--Total Marks : 50 Time: 2 hrs
+--1. What is the difference between TRUNCATE and DELETE.
+--(Marks 2)
+----Ans
+--Delete removes records one by one where as truncate removes all the record at a time so execution of truncate is 
+--faster than delete
+--Delete can be used to remove selective record where as truncate can't be performed on selected record
+--Delete is DML comman whereas Truncate is DDL command
+
+
+--2. What are constrains and why do we require them? How do we create FOREIGN KEY Constraint 
+--on new table and existing table. Explain with the help of examples. (Marks 3)
+
+--Ans
+--Constraints are rules that are set to the fields/columns of table to make sure only valid/good
+--data get recorded into the columns
+--We require constraints to maintain data integriti.
+--Foreign Key constraint on a column of a child table require refrence of column from parent table
+--so that data which is there in refrenced column of parent table only get inserted into FK column
+--FK on new table 
+--syntax:
+--CREATE TABLE table_name
+--(Colname datatype FOREIGN KEY REFERENCES Parent_table_name(ColName),...)
+--e.g
+--create table customer
+--(cid int, order_id int Foreign Key references Order_detail (oid))
+
+--FK on existing table 
+--syntax:
+--Alter TABLE table_name
+--ADD CONSTRAINT constraint_name FOREIGN KEY REFERENCES Parent_table_name(col name)
+--e.g
+--alter table customer
+--add constraint FK_customer_orderid_OrderDetail_oid FOREIGN KEY REFERENCES  Order_detail (oid)
+
+
+--3. Explain following functions with SYNTAX and example: (Marks 10)
+----i) first_value()
+--Ans
+--Its analytic function in sql which takes one arguement and  helps in retrieving the first value of the passed arguement 
+--syntax:
+--select first_value(colName) over([Partition By col1][ order by col2][Rows between unbounded Preceding and unbounded following) 
+--as aliasName from tableName
+select *,first_value(Sedol_code) over(Partition By Head_office order by scty_code) as FstValue from security_table
+--By default it starts from unbounded preceding to current row so no need to mention that in over clause
+--ii) lag()
+--Ans
+--Its analytic function in sql which takes one must arguement and two optional arguement and  
+--It helps in retrieving the next value of the current passed arguement
+--By default it returns very next value but we can pass 2nd arguemet to get 2ns lag or 3rd lad or so on
+--By default it returns NUll for where there is no lag value, in place of that we can pass 3rd arg
+--so that instead of null we can get any integer
+--select *,lag(ColName,[n_lag int],[Default Value]) over([Partition By col1 order by col2]) as lag from tableName
+--e.g
+select *,lag(Sedol_code,1,0) over(Partition By Head_office order by scty_code) as lag from security_table
+
+----iii) dense_rank()
+--Dense_Rank helps in getting rank according to the column its ordered. No arguement is passsed but has over claouse must have order by column
+--It is different from rank(). Here we dont get rank number get broken. If two record get same rank  of rank 1 then the next
+--record gets rank 2
+--syntax
+--select rank()over([partition By col1] order by col2 [desc]) as alias name from table name
+--e.g
+select *,dense_rank() over(order by sedol_code desc) as desnrnk from security_table
+
+--iv) Pivot()
+--And
+--Pivot is used to make contingency table like structure
+--When one column needs to be pivoted on some of its unique values  we use pivot function
+--Syntax:
+--Select UnPivotedCol, [Value1],[Value2] as alais,...
+--from table_name
+--pivot(aggregateFunction(col) for col in([Value1].[Vaule2],....) as Pvt
+--e.g
+select company,[Mumbai],[Kolkata]
+from security_table
+pivot(count(Head_office) for Head_office in([Mumbai],[Kolkata])) as pvt
+
+
+
+
+(using SQL HT2 Data.xlsx 3.2 and 3.3 for questions 4-10)
+3.2 Create Employee Table (2.5 marks):
+
+Create table EMPLOYEE_TABLE(
+	emp_id int primary key, emp_name varchar(20),job_name varchar(20),manager_id int,
+	hire_date date,salary money,commission money, dep_id int)
+
+insert into EMPLOYEE_TABLE
+Select 68319, 'KAYLING', 'PRESIDENT', NULL, '1991-11-18', 6000,NULL , 1001
+Union Select 66928, 'BLAZE', 'MANAGER', 68319, '1991-05-01', 2750, NULL, 3001
+Union Select 67832, 'CLARE', 'MANAGER', 68319, '1991-06-09', 2550,NULL , 1001
+Union Select 65646, 'JONAS', 'MANAGER', 68319, '1991-04-02', 2957, NULL, 2001
+Union Select 67858, 'SCARLET', 'ANALYST', 65646, '1997-04-19', 3100,NULL , 2001
+Union Select 69062, 'FRANK', 'ANALYST', 65646, '1991-12-03', 3100,NULL , 2001
+Union Select 63679, 'SANDRINE', 'CLERK', 69062, '1990-12-18', 900, NULL, 4001
+Union Select 64989, 'ADELYN', 'SALESMAN', 66928, '1991-02-20', 1700, 400, 3001
+Union Select 65271, 'WADE', 'SALESMAN', 66928, '1991-02-22', 1350, 600, 3001
+Union Select 66564, 'MADDEN', 'SALESMAN', 66928, '1991-09-28', 1350, 1500, 4001
+Union Select 68454, 'TUCKER', 'SALESMAN', 66928, '1991-09-08', 1600, 0, 3001
+Union Select 68736, 'ADNRES', 'CLERK', 67858, '1997-05-23', 1200,NULL , 2001
+Union Select 69000, 'JULIUS', 'CLERK', 66928, '1991-12-03', 1050, NULL, 3001
+Union Select 69324, 'MARKER', 'CLERK', 67832, '1992-01-23', 1400, NULL, 1001
+
+
+create table Department_Table(
+dep_id int,	department varchar(15),	dept_location varchar(18),	Project varchar(3))
+
+
+truncate table Department_Table
+
+insert into Department_Table
+Select 1001, 'FINANCE', 'SYDNEY', 'P1'	
+Union Select 3001, 'MARKETING', 'PERTH', 'P2'	
+Union Select 1001, 'FINANCE', 'SYDNEY', 'P2'	
+Union Select 2001, 'AUDIT', 'MELBOURNE', 'P1'	
+Union Select 2001, 'AUDIT', 'MELBOURNE', 'P2'	
+Union Select 2001, 'AUDIT', 'MELBOURNE', 'P1'	
+Union Select 4001, 'PRODUCTION', 'BRISBANE', 'P2'	
+Union Select 3001, 'MARKETING', 'PERTH', 'P1'	
+Union Select 3001, 'MARKETING', 'PERTH', 'P1'	
+Union Select 4001, 'PRODUCTION', 'BRISBANE', 'P1'	
+Union Select 3001, 'MARKETING', 'PERTH', 'P1'	
+Union Select 2001, 'AUDIT', 'MELBOURNE', 'P2'	
+Union Select 3001, 'MARKETING', 'PERTH', 'P1'	
+Union Select 1001, 'FINANCE', 'SYDNEY', 'P1'	
+
+--4. Write a SQL query to fetch the count of employees working in project 'P1' and have no 
+--commission along with employee name.
+--(Marks 3)
+
+select *,count(project) over(partition by project) as Emp_count_in_P1 from EMPLOYEE_TABLE as e
+inner join Department_Table as d
+on e.dep_id=d.dep_id
+where Project = 'P1' and (commission is null or commission=0)
+
+
+
+--5. Write a SQL query to fetch only odd rows from employee table.
+--(Marks 2)
+select *  from(
+select *,ROW_NUMBER()over(order by emp_id) as rowNum from EMPLOYEE_TABLE) as a
+where a.rowNum%2=1
+
+--6. Write a SQL query to get last 50% records from employee table.
+--(Marks 2)
+
+select *  from(
+select *,ROW_NUMBER()over(order by emp_id) as rowNum from EMPLOYEE_TABLE) as a
+where a.rowNum>(select count(*) from EMPLOYEE_TABLE)/2
+
+--7. Write an SQL query to fetch the names of the employees who earn the highest salary in each department_name from employee
+-- table
+--(Marks 3)
+with cte as
+(
+select department,emp_name,salary,rank()over( partition by department order by salary desc) as rnk 
+from EMPLOYEE_TABLE as e 
+inner join department_table as d
+on d.dep_id=e.dep_id
+) select distinct emp_name, department, salary as Highest_Salary_per_dept from cte where cte.rnk=1
+order by salary desc
+
+--8. Write a query in SQL to list the employee ID, name, salary, department name of all the 'MANAGERS' and 'ANALYST'
+-- working in SYDNEY, PERTH with an experience more than 5 years without receiving the commission and display the list 
+--in ascending order of location. (experience is difference between hire_date and current date)
+--(Marks 5)
+
+with cte as(
+select distinct emp_id,emp_name,salary,department,dept_location,commission,
+DATEDIFF(year,hire_date,getdate()) as Experience_in_years
+from EMPLOYEE_TABLE as e 
+inner join department_table as d
+on d.dep_id=e.dep_id
+where job_name in('MANAGER' , 'ANALYST') and 
+d.dept_location in('SYDNEY', 'PERTH'))	select emp_id,emp_name,salary,department from cte
+										where Experience_in_years>5 and commission is null or commission=0
+										order by dept_location
+
+select * from EMPLOYEE_TABLE
+
+--9. Write a query in SQL to list the employees who joined in 1991 in a designation same as the most senior person of
+-- the year 1991.
+--(Marks 2)
+
+--with cte as(
+--select *,rank() over(order by hire_date) as rowNum from EMPLOYEE_TABLE
+--where year(hire_date)=1991
+--) select emp_name as Seniormost_Employee_Joined_in_1991_per_Designation, Job_name as Designation
+--							from cte where rowNum=1
+
+with cte as(
+select *,rank() over(order by hire_date) as rowNum from EMPLOYEE_TABLE
+) select emp_name , Job_name as Designation
+	from cte where year(hire_date)=1991 and job_name in(select job_name from cte where rowNum=1)
+
+--10.Write a query in SQL to display the employee ID, name, salary, department name, location, department ID, 
+--job name of all the employees working at SYDNEY or working in the FINANCE department with an annual salary above 28000, 
+--but the monthly salary should not be 3000 or 2800 and who does not works as a MANAGER and whose ID containing a digit 
+--of '3' or '7' in 3rd position. List the result in ascending order of department ID and descending order of job name.
+--(Marks 3)
+select * from Department_Table
+select * from EMPLOYEE_TABLE
+
+select emp_id,emp_name,salary,department,dept_location, dep_id, job_name
+from(
+	select  distinct emp_id,emp_name,salary,department,dept_location, e.dep_id, job_name,
+	salary*12 as Annual_Salary from EMPLOYEE_TABLE as e
+	inner join Department_Table as d
+	on e.dep_id=d.dep_id
+	where (department = 'FINANCE' or dept_location ='SYDNEY')
+	and emp_id like '__[3,7]%' 
+	and job_name <> 'MANAGER') as derived
+	where Annual_Salary>28000 and salary not in(3000,2800)
+
+
+--11.Write a query to find average, minimum and maximum list prices for products that belong to each productsubcategoryid. 
+--Use table Production.product from(AdventureWorks2008). (Marks 2)
+select productsubcategoryid,avg(ListPrice) as Average, min(ListPrice) as MInimum, Max(Listprice) as Maximum 
+from Production.product
+group by 
+productsubcategoryid
+
+--12.Using AdventureWorks2008 HumanResources.vEmployee and Sales.SalesPerson do following task:
+--i. Write a SQL query return the difference in sales quotas for a specific employee over previous calendar quarters (Marks 3)
+select * from HumanResources.vEmployee
+select * from Sales.SalesPerson
+
+select concat(FirstName,' ',MiddleName,' ',lastname) as Name, SalesQuota,SalesLastYear,
+SalesLastYear/4-SalesQuota as differences
+from Sales.SalesPerson as s
+inner join HumanResources.vEmployee as h
+on h.BusinessEntityID=s.BusinessEntityID
+
+
+--ii. Create a stored procedure from AdventureWork2008 where it should accept one parameter called salesperson if 
+--salesperson is null, it should print 'ERROR: You must specify the last name of the sales person.' or else it should 
+--return salesYTD and lastname (Marks 5)
+select top 3 * from HumanResources.vEmployee
+select top 3 * from Sales.SalesPerson
+
+create procedure USP_Salesperson (@salesperson varchar(20))
+as begin
+if(
+select LastName from HumanResources.vEmployee where LastName=@salesperson) is null
+begin
+print 'ERROR: You must specify the last name of the sales person.'
+end
+else
+begin
+select lastname,salesYTD from Sales.SalesPerson as s
+inner join HumanResources.vEmployee as h
+on h.BusinessEntityID=s.BusinessEntityID
+where LastName=@salesperson
+end
+end
+
+exec USP_Salesperson 'Jiang1'
+
+exec USP_Salesperson 'Jiang'
