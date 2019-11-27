@@ -1,4 +1,5 @@
---Sql Project
+--Sql Project 1/Sabyasachi
+
 --1.Create a database NIKHIL ANALYTICS
 
 create database Nikhil_Analytics
@@ -7,7 +8,9 @@ use Nikhil_Analytics
 
 
 --2.Create STUDENT_INFO table with following columns
---a) STUDENT_ID : should accept maximum of 10 characters , should not accept null values & we must be able to identify each records uniquely using STUDENT_ID, student id must be automatically generated in the format STD_YEAR_SEQUENCENO ex: std_2018_01
+--a) STUDENT_ID : should accept maximum of 10 characters , should not accept null values & we must be able to 
+--identify each records uniquely using STUDENT_ID, student id must be automatically generated in the format STD_YEAR_SEQUENCENO 
+--ex: std_2018_01
 --b) NAME : should accept maximum of 20 characters , should not accept null values
 --c) ADDRESS: should accept maximum of 90 characters , should not accept null values
 --d) PHONE_NO : should accept exactly 10 numbers & each digit should be between 0-9, should not accept null values
@@ -33,8 +36,8 @@ use Nikhil_Analytics
 --Solution
 --Creating Table
 Create Table STUDENT_INFO(
-	STUDENT_ID Varchar(10) Primary Key,
-	--STUDENT_ID as Concat('std_',year(getdate()),'_',cast(Dummy_ID as Varchar(3))),
+	Dummy_ID int identity(1,1),
+	STUDENT_ID as Concat('std_','2019','_',Dummy_ID) Persisted Primary Key,
 	NAME varchar(20) Not Null,
 	ADDRESS varchar(90) Not Null,
 	PHONE_NO Bigint Not Null Check (Len(PHONE_NO)=10),
@@ -70,41 +73,16 @@ Create Table STUDENT_INFO(
 			When COURSE_OPTED1 ='DATA SCIENCE MODELLING & MACHINE LEARNING' Then 8
 			Else Null
 		End,
-		ADMISSION_DATE),
-	--Dummy_ID int identity(1,1)
+		ADMISSION_DATE)
 	)
 
---Creating Trigger for automatic updating of Student_id
-Create Trigger Trg_STUDENT_INFO
-on STUDENT_INFO
-After INSERT 
-as begin
-update STUDENT_INFO
-set STUDENT_ID = Concat('std_',year(getdate()),'_',cast((select COUNT(student_id) from STUDENT_INFO) as varchar(4)))
-from inserted
-where STUDENT_INFO.STUDENT_ID=inserted.STUDENT_ID
-End
 
-
---Record Insertion
-Insert Into STUDENT_INFO 
-	(STUDENT_ID,NAME,ADDRESS,PHONE_NO,EMAIL_ID,COURSE_OPTED1,ADMISSION_DATE)
-	Values	('any','SaMMb3ya','xyz',9650910475,'s@absahu','DATA SCIENCE MODELLING & MACHINE LEARNING','11/24/2019')
 
 Insert Into STUDENT_INFO 
-	(STUDENT_ID,NAME,ADDRESS,PHONE_NO,EMAIL_ID,COURSE_OPTED1,ADMISSION_DATE)
-	Values	('any','SaMMb3ya','xyz',9650910475,'s@absahu','DATA ANALYTICS POWER PACK','11/24/2019'),
-			('any','Sabie','xyz',9685094475,'sabie@sahu','DATA ANALYTICS POWER PACK','11/24/2019')
-
-Insert Into STUDENT_INFO 
-	(STUDENT_ID,NAME,ADDRESS,PHONE_NO,EMAIL_ID,COURSE_OPTED1,ADMISSION_DATE)
-	Values('any','Sabie','xyz',9685094475,'sabie@sahu','BUSINESS ANALYTICS POWER PACK','11/24/2019')
+	(NAME,ADDRESS,PHONE_NO,EMAIL_ID,COURSE_OPTED1,ADMISSION_DATE)
+	Values('Sabie','xyz',9682942475,'sabie@sahu','BUSINESS ANALYTICS POWER PACK','11/24/2019')
 
 select * from STUDENT_INFO
---truncate table STUDENT_INFO
---drop table STUDENT_INFO
---drop trigger Trg_STUDENT_INFO 
-
 
 --2.Create R_marks_info table with following columns
 --a) Student_ID : should accept maximum of 10 characters, should not accept null values & should create a reference to student_info table
@@ -119,7 +97,7 @@ select * from STUDENT_INFO
 --i) Retest3 :
 
 Create Table R_marks_info(
-	Student_ID Varchar(10) Not Null Foreign Key References Student_Info(Student_ID),
+	Student_ID Varchar(21) Not Null Foreign Key References Student_Info(Student_ID),
 	Class_start_Date date,
 	Class_End_Date date,
 	Faculty Varchar(50) Not Null,
@@ -134,8 +112,7 @@ Create Table R_marks_info(
 Insert Into R_marks_info
 Values('std_2019_1',GETDATE(),dateadd(month,3,getdate()),'aaa',2.3,3.6,Null,Null,Null,Null)
 
-Insert Into R_marks_info
-Values('xyz',GETDATE(),GETDATE(),'aaa',2.3,3.6,Null,Null,Null,Null)
+
 
 select * from R_marks_info
 
@@ -155,7 +132,7 @@ select * from R_marks_info
 --m) Retest3
 
 Create Table SAS_marks_info(
-	Student_ID Varchar(10) Not Null Foreign Key References Student_Info(Student_ID),
+	Student_ID Varchar(21) Not Null Foreign Key References Student_Info(Student_ID),
 	Class_start_Date date,
 	Class_End_Date date,
 	Faculty Varchar(50) Not Null,
@@ -181,7 +158,7 @@ Create Table SAS_marks_info(
 --h) Retest2
 
 Create Table SQL_marks_info(
-	Student_ID Varchar(10) Not Null Foreign Key References Student_Info(Student_ID),
+	Student_ID Varchar(21) Not Null Foreign Key References Student_Info(Student_ID),
 	Class_start_Date date,
 	Class_End_Date date,
 	Faculty Varchar(50) Not Null,
@@ -202,7 +179,7 @@ Create Table SQL_marks_info(
 --h) Retest
 
 Create Table EXCEL_marks_info(
-	Student_ID Varchar(10) Not Null Foreign Key References Student_Info(Student_ID),
+	Student_ID Varchar(21) Not Null Foreign Key References Student_Info(Student_ID),
 	Class_start_Date date,
 	Class_End_Date date,
 	Faculty Varchar(50) Not Null,
@@ -223,7 +200,7 @@ Create Table EXCEL_marks_info(
 --h) Retest1
 
 Create Table VBA_marks_info(
-	Student_ID Varchar(10) Not Null Foreign Key References Student_Info(Student_ID),
+	Student_ID Varchar(21) Not Null Foreign Key References Student_Info(Student_ID),
 	Class_start_Date date,
 	Class_End_Date date,
 	Faculty Varchar(50) Not Null,
@@ -243,7 +220,7 @@ Create Table VBA_marks_info(
 --g) Retest1
 
 Create Table TABLEAU_marks_info(
-	Student_ID Varchar(10) Not Null Foreign Key References Student_Info(Student_ID),
+	Student_ID Varchar(21) Not Null Foreign Key References Student_Info(Student_ID),
 	Class_start_Date date,
 	Class_End_Date date,
 	Faculty Varchar(50) Not Null,
@@ -263,7 +240,7 @@ Create Table TABLEAU_marks_info(
 --h) Retest2
 
 Create Table PYTHON_marks_info(
-	Student_ID Varchar(10) Not Null Foreign Key References Student_Info(Student_ID),
+	Student_ID Varchar(21) Not Null Foreign Key References Student_Info(Student_ID),
 	Class_start_Date date,
 	Class_End_Date date,
 	Faculty Varchar(50) Not Null,
@@ -284,7 +261,7 @@ Create Table PYTHON_marks_info(
 --g) Retest
 
 Create Table ML_marks_info(
-	Student_ID Varchar(10) Not Null Foreign Key References Student_Info(Student_ID),
+	Student_ID Varchar(21) Not Null Foreign Key References Student_Info(Student_ID),
 	Class_start_Date date,
 	Class_End_Date date,
 	Faculty Varchar(50) Not Null,
@@ -305,7 +282,7 @@ Create Table ML_marks_info(
 --h) Retest
 
 Create Table ASAS_marks_info(
-	Student_ID Varchar(10) Not Null Foreign Key References Student_Info(Student_ID),
+	Student_ID Varchar(21) Not Null Foreign Key References Student_Info(Student_ID),
 	Class_start_Date date,
 	Class_End_Date date,
 	Faculty Varchar(50) Not Null,
@@ -329,7 +306,7 @@ Create Table ASAS_marks_info(
 --k) Tableau_test
 
 Create Table FULL_LENGTH_marks_info(
-	Student_ID Varchar(10) Not Null Foreign Key References Student_Info(Student_ID),
+	Student_ID Varchar(21) Not Null Foreign Key References Student_Info(Student_ID),
 	Class_start_Date date,
 	Class_End_Date date,
 	Faculty Varchar(50) Not Null,
@@ -354,7 +331,7 @@ Create Table FULL_LENGTH_marks_info(
 --i) Actual_course_enddate
 
 Create Table Placement_Activity(
-	Student_ID Varchar(10) Not Null Foreign Key References Student_Info(Student_ID),
+	Student_ID Varchar(21) Not Null Foreign Key References Student_Info(Student_ID),
 	Mock_interview1 Varchar(50),
 	Mock_interview2 Varchar(50),
 	Mock_interview3 Varchar(50),
@@ -363,3 +340,6 @@ Create Table Placement_Activity(
 	Certificate_Issued Varchar(3) Check(Certificate_Issued in('YES','NO')),
 	Actual_course_enddate Date
 	)
+
+
+-----------------------------------------PROJECT END----------------------------------------------
