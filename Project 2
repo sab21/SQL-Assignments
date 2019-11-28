@@ -121,7 +121,10 @@ Where DATEDIFF(Month,C.Date,getdate())<=12
 
 --5. Create 3 groups with 5 customers in each group with decreasing order of sales
 
---Solution
+--Solution using Ntile function
+Select *, NTILE(3)over(Order by Sales Desc) as Tiles from Customer
+
+--Solution using Case Expression
 Select *,
 Case 
 When RowNum between  1 and 5 then 'Top5'
